@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DashboardApi.Data;
 using DashboardApi.Models;
+using DashboardApi.Dtos;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using AutoMapper;
 
 namespace DashboardApi.Controllers
 {
@@ -15,10 +18,16 @@ namespace DashboardApi.Controllers
     public class SectionsController : ControllerBase
     {
         private readonly Context _context;
+        IMapper _mapper;
 
         public SectionsController(IConfiguration context)
         {
             _context = new Context(context);
+            _mapper = new Mapper(new MapperConfiguration(cfg =>
+            {
+                cfg.CreateMap<SectionDto, Section>();
+            }));
+
         }
 
         // GET: api/Sections
@@ -76,12 +85,13 @@ namespace DashboardApi.Controllers
         // POST: api/Sections
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Section>> PostSection(Section section)
+        public async Task<ActionResult<Section>> PostSection(SectionDto section)
         {
-            _context.Sections.Add(section);
+            Section sectionDb = _mapper.Map<Section>(section);
+            _context.Sections.Add(sectionDb);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetSection", new { id = section.Id }, section);
+            return CreatedAtAction("GetSection", sectionDb);
         }
 
         // DELETE: api/Sections/5

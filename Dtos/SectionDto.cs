@@ -1,4 +1,4 @@
-namespace DashboardApi;
+namespace DashboardApi.Dtos;
 
 public class SectionDto
 {

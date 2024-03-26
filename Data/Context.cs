@@ -1,5 +1,6 @@
 //System.ComponentModel.DataAnnotations; 
 //is a library used for data annotations to define validation rules, specify database constraints
+
 using System.ComponentModel.DataAnnotations;
 // is used for defining schema information for database entities. 
 //It includes attributes like Table, Column, ForeignKey, DatabaseGenerated, NotMapped, 
@@ -47,7 +48,8 @@ public class Context : DbContext
     //a way to connect
     protected override void OnConfiguring(DbContextOptionsBuilder options)
         => options
-            .UseNpgsql(connectionString: "Server=localhost;User Id=postgres;Password=password;Database=postgres;");
+            // .UseNpgsql(connectionString: "Server=localhost;User Id=postgres;Password=password;Database=postgres;");
+            .UseNpgsql(_config.GetConnectionString("DefaultConnection"), optionsBuilder => optionsBuilder.EnableRetryOnFailure());
     // .UseNpgsql(connectionString: _config.GetConnectionString("TimescaleConnection"), options => options.EnableRetryOnFailure());
 
     //.LogTo(Console.WriteLine)
