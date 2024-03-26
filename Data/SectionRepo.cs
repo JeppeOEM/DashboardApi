@@ -1,33 +1,52 @@
-namespace DashboardApi.Data;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using DashboardApi.Data;
+using DashboardApi.Models;
+using Microsoft.EntityFrameworkCore;
 
-public class SectionRepo : ISectionRepo
+namespace DashboardApi.Data
 {
-
-    private readonly Context _context;
-
-    public SectionRepo(IConfiguration context)
+    public class SectionRepo : ISectionRepo
     {
-        _context = new Context(context);
-    }
+        private readonly Context _context;
 
-    public async void SaveChanges<T>(T entityToAdd)
-    {
-        await _context.SaveChangesAsync();
-    }
-
-    public void AddEntity<T>(T entityToAdd)
-    {
-        if (entityToAdd != null)
+        public SectionRepo(Context context)
         {
-            _context.Add(entityToAdd);
+            _context = context;
+        }
+
+        public async Task<IEnumerable<Section>> GetSections()
+        {
+            return await _context.Sections.ToListAsync();
+        }
+
+        public async Task<Section> GetSectionById(long id)
+        {
+            return await _context.Sections.FindAsync(id);
+        }
+
+        public async Task AddSection(Section section)
+        {
+            _context.Sections.Add(section);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateSection(Section section)
+        {
+            _context.Entry(section).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteSection(Section section)
+        {
+            _context.Sections.Remove(section);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> SectionExists(long id)
+        {
+            return await _context.Sections.AnyAsync(e => e.Id == id);
         }
     }
-    public void RemoveEntity<T>(T entityToAdd)
-    {
-        if (entityToAdd != null)
-        {
-            _context.Remove(entityToAdd);
-        }
-    }
-
 }

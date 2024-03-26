@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using DashboardApi.Data;
 using DashboardApi.Models;
 using DashboardApi.Dtos;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using AutoMapper;
 
 namespace DashboardApi.Controllers
@@ -17,64 +16,55 @@ namespace DashboardApi.Controllers
     [ApiController]
     public class SectionsController : ControllerBase
     {
-        private readonly Context _context;
-        IMapper _mapper;
+        private readonly ISectionRepo _sectionRepo;
+        private readonly IMapper _mapper;
 
-        ISectionRepo _sectionRepo;
-
-        public SectionsController(IConfiguration context, ISectionRepo sectionRepo)
+        public SectionsController(ISectionRepo sectionRepo, IMapper mapper)
         {
-            _context = new Context(context);
-
             _sectionRepo = sectionRepo;
-
-            _mapper = new Mapper(new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<SectionDto, Section>();
-            }));
-
+            _mapper = mapper;
         }
 
         // GET: api/Sections
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Section>>> GetSections()
         {
-            return await _context.Sections.ToListAsync();
+            var sections = await _sectionRepo.GetSections();
+            return Ok(sections);
         }
 
         // GET: api/Sections/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Section>> GetSection(long id)
         {
-            var section = await _context.Sections.FindAsync(id);
-
+            var section = await _sectionRepo.GetSectionById(id);
             if (section == null)
             {
                 return NotFound();
             }
-
             return section;
         }
 
         // PUT: api/Sections/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSection(long id, Section section)
+        public async Task<IActionResult> PutSection(long id, SectionDto sectionDto)
         {
-            if (id != section.Id)
+            var section = await _sectionRepo.GetSectionById(id);
+            if (section == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(section).State = EntityState.Modified;
+            _mapper.Map(sectionDto, section);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _sectionRepo.UpdateSection(section);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SectionExists(id))
+                if (!await _sectionRepo.SectionExists(id))
                 {
                     return NotFound();
                 }
@@ -90,35 +80,27 @@ namespace DashboardApi.Controllers
         // POST: api/Sections
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Section>> PostSection(SectionDto section)
+        public async Task<ActionResult<Section>> PostSection(SectionDto sectionDto)
         {
-            Section sectionDb = _mapper.Map<Section>(section);
+            var section = _mapper.Map<Section>(sectionDto);
+            await _sectionRepo.AddSection(section);
 
-            _context.Sections.Add(sectionDb);
-            await _context.SaveChangesAsync();
-            // calls GetSection with the id of the object and returns sectionDb
-            return CreatedAtAction(nameof(GetSection), new { id = sectionDb.Id }, sectionDb);
+            return CreatedAtAction(nameof(GetSection), new { id = section.Id }, section);
         }
 
         // DELETE: api/Sections/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSection(long id)
         {
-            var section = await _context.Sections.FindAsync(id);
+            var section = await _sectionRepo.GetSectionById(id);
             if (section == null)
             {
                 return NotFound();
             }
 
-            _context.Sections.Remove(section);
-            await _context.SaveChangesAsync();
+            await _sectionRepo.DeleteSection(section);
 
             return NoContent();
-        }
-
-        private bool SectionExists(long id)
-        {
-            return _context.Sections.Any(e => e.Id == id);
         }
     }
 }
