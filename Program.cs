@@ -3,6 +3,7 @@ using DashboardApi.Models;
 using DashboardApi.Data;
 using Microsoft.Extensions.DependencyInjection;
 
+
 var builder = WebApplication.CreateBuilder(args);
 // builder.Services.AddDbContext<Context>(options =>
 //      options.UseSqlServer(builder.Configuration.GetConnectionString("SectionContext") ?? throw new InvalidOperationException("Connection string 'SectionContext' not found.")));
@@ -34,6 +35,8 @@ builder.Services.AddCors((options) =>
             });
     });
 
+//scoped connection
+builder.Services.AddScoped<ISectionRepo, SectionRepo>();
 
 var app = builder.Build();
 

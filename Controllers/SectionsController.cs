@@ -20,9 +20,14 @@ namespace DashboardApi.Controllers
         private readonly Context _context;
         IMapper _mapper;
 
-        public SectionsController(IConfiguration context)
+        ISectionRepo _sectionRepo;
+
+        public SectionsController(IConfiguration context, ISectionRepo sectionRepo)
         {
             _context = new Context(context);
+
+            _sectionRepo = sectionRepo;
+
             _mapper = new Mapper(new MapperConfiguration(cfg =>
             {
                 cfg.CreateMap<SectionDto, Section>();
@@ -88,10 +93,11 @@ namespace DashboardApi.Controllers
         public async Task<ActionResult<Section>> PostSection(SectionDto section)
         {
             Section sectionDb = _mapper.Map<Section>(section);
+
             _context.Sections.Add(sectionDb);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetSection", sectionDb);
+            // calls GetSection with the id of the object and returns sectionDb
+            return CreatedAtAction(nameof(GetSection), new { id = sectionDb.Id }, sectionDb);
         }
 
         // DELETE: api/Sections/5
